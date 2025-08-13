@@ -1,45 +1,70 @@
 import { Webhook } from "svix";
+import User from '../Models/User_Model.js';
 
 export const clerkWebhooks = async (req, res) => {
   try {
     const whook = new Webhook(process.env.CLERK_WEBHOOK_SECRET);
-    await whook.verify(req.rawBody, {
-      "svix-id": req.headers["svix-id"],
-      "svix-timestamp": req.headers["svix-timestamp"],
-      "svix-signature": req.headers["svix-signature"]
+
+    whook.verify(req.rawBody, {
+      "svix-id": req.headers["svix-id"] || req.headers["Svix-Id"],
+      "svix-timestamp": req.headers["svix-timestamp"] || req.headers["Svix-Timestamp"],
+      "svix-signature": req.headers["svix-signature"] || req.headers["Svix-Signature"]
     });
 
     const { data, type } = req.body;
+
+    console.log(`📩 Webhook Event: ${type}`);
+    console.log("Incoming Clerk data:", data);
+
     switch (type) {
       case "user.created": {
         const userData = {
           _id: data.id,
           email: data.email_addresses[0].email_address,
-          name: data.first_name + " " + data.last_name,
+          name: `${data.first_name || ''} ${data.last_name || ''}`.trim(),
           imageUrl: data.image_url,
         };
-        await User.create(userData);
-        return res.json({});
+
+        try {
+          const user = await User.create(userData);
+          console.log("✅ User created:", user);
+        } catch (err) {
+          if (err.code === 11000) {
+            console.log("⚠️ User already exists, skipping create.");
+          } else {
+            throw err;
+          }
+        }
+        return res.status(200).json({ success: true });
       }
+
       case "user.updated": {
-        const userData = {
+        const updatedData = {
           email: data.email_addresses[0].email_address,
-          name: data.first_name + " " + data.last_name,
+          name: `${data.first_name || ''} ${data.last_name || ''}`.trim(),
           imageUrl: data.image_url,
         };
-        await User.findByIdAndUpdate(data.id, userData);
-        return res.json({});
+
+        const user = await User.findByIdAndUpdate(data.id, updatedData, {
+          new: true,
+          runValidators: true
+        });
+        console.log("🔄 User updated:", user);
+        return res.status(200).json({ success: true });
       }
+
       case "user.deleted": {
         await User.findByIdAndDelete(data.id);
-        return res.json({});
+        console.log("🗑️ User deleted:", data.id);
+        return res.status(200).json({ success: true });
       }
-      default: {
-        return res.json({});
-      }
+
+      default:
+        console.log(`ℹ️ Unhandled webhook event type: ${type}`);
+        return res.status(200).json({ received: true });
     }
   } catch (error) {
-    console.error(error);
-    res.status(400).json({ success: false, message: error.message });
+    console.error("❌ Webhook verification or processing failed:", error);
+    return res.status(400).json({ success: false, message: error.message });
   }
 };
