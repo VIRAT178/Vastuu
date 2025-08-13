@@ -14,7 +14,19 @@ app.get("/", (req, res) => {
   res.send("API working");
 });
 
-app.post("/clerk", express.json(), clerkWebhooks);
+app.post('/clerk', 
+  (req, res, next) => {
+    let data = '';
+    req.on('data', chunk => data += chunk);
+    req.on('end', () => {
+      req.rawBody = data;
+      next();
+    });
+  },
+  express.json(),
+  clerkWebhooks
+);
+
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
