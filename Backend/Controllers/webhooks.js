@@ -25,7 +25,7 @@ import User from '../Models/User_Model.js'
 
             case 'user.updated': {
                 const userData ={
-                    email: data.email_addresses[0].email_address,
+                    email: data.email_addresse[0].email_address,
                     name: data.first_name + " " + data.last_name,
                     imageUrl: data.image_url,
                 }
