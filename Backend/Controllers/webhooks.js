@@ -17,45 +17,62 @@ export const clerkWebhooks = async (req, res) => {
     const { data, type } = body;
 
     switch (type) {
-      case "user.created": {
-       
-        let email = "";
-        if (Array.isArray(data.email_addresses) && data.email_addresses.length > 0) {
-        
-          if (data.primary_email_address_id) {
-            const primaryEmailObj = data.email_addresses.find(
-              (e) => e.id === data.primary_email_address_id
-            );
-            email = primaryEmailObj ? primaryEmailObj.email_address : data.email_addresses[0].email_address;
-          } else {
-            email = data.email_addresses.email_address;
-          }
-        }
-        
-        const name =
-          [data.first_name, data.last_name].filter(Boolean).join(" ") ||
-          email ||
-          data.id;
+     case "user.created": {
+  
+  const email =
+    Array.isArray(data.email_addresses) &&
+    data.email_addresses.length > 0 &&
+    typeof data.email_addresses[0].email_address === "string"
+      ? data.email_addresses.email_address
+      : "";
 
-        const userData = {
-          _id: data.id,
-          email,
-          name,
-          imageUrl: data.image_url || "",
-          enrolledCourses: [],
-        };
+  const name =
+    [data.first_name, data.last_name].filter(Boolean).join(" ") ||
+    email ||
+    data.id;
 
-        if (!userData.email || typeof userData.email !== "string" || !userData.email.includes("@")) {
-          console.error("Webhook failed: email missing or invalid for user.id", data.id, data);
-          return res
-            .status(400)
-            .json({ success: false, message: "User email missing or invalid in webhook" });
-        }
+  if (!email) {
+    console.error("Webhook failed: email missing for user.id", data.id, data);
+    return res.status(400).json({ success: false, message: "User email missing in webhook" });
+  }
 
-        const user = await User.create(userData);
-        console.log("User created:", user);
-        return res.status(200).json({ success: true });
-      }
+  
+  let existingUser = await User.findOne({ email });
+
+  if (existingUser) {
+    
+    if (!existingUser.clerkUserId) {
+      existingUser.clerkUserId = data.id;
+      await existingUser.save();
+    }
+    return res.status(200).json({ success: true, message: "User already exists with this email." });
+  }
+
+  
+  let user = await User.findOne({ clerkUserId: data.id });
+
+  if (user) {
+    user.email = email;
+    user.name = name;
+    user.imageUrl = data.image_url || "";
+    await user.save();
+    console.log("User updated (already exists):", user);
+    return res.status(200).json({ success: true });
+  }
+
+  
+  user = new User({
+    clerkUserId: data.id,
+    name,
+    email,
+    imageUrl: data.image_url || "",
+    enrolledCourses: [],
+  });
+
+  await user.save();
+  console.log("User created:", user);
+  return res.status(200).json({ success: true });
+}
 
       case "user.updated": {
         let email = "";
