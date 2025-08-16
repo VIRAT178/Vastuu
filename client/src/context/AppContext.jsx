@@ -4,8 +4,7 @@ import humanizeDuration from "humanize-duration";
 import { useAuth, useUser } from "@clerk/clerk-react";
 import axios from "axios";
 import { toast } from "react-toastify";
-const { user } = useUser();
-const clerkUserId = user?.id;
+
 
 
 export const AppContext = createContext();
