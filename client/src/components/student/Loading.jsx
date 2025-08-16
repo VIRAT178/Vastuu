@@ -1,6 +1,18 @@
-import React from "react";
+import React, { useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 
 const Loading = () => {
+  const {path} = useParams()
+  const navigate = useNavigate()
+
+  useEffect(()=>{
+    if (path) {
+      const timer = setTimeout(()=>{
+        navigate(`/${path}`)
+      },5000)
+      return ()=>clearTimeout(timer)
+    }
+  },[])
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-indigo-950 via-blue-900 to-blue-800">
       <div className="w-20 h-20 rounded-full bg-white/10 backdrop-blur-lg border-4 border-cyan-400/40 flex items-center justify-center shadow-lg">

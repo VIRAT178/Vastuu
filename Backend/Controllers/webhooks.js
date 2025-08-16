@@ -22,14 +22,18 @@ export const clerkWebhooks = async (req, res) => {
       case "user.created": {
         const userData = {
           _id: data.id,
-          email: data.email_addresses[0].email_address,
-          name: `${data.first_name || ""} ${data.last_name || ""}`.trim(),
+          email: data.email_addresses.email_address,
+          name:
+            [data.first_name, data.last_name].filter(Boolean).join(" ") ||
+            data.email_addresses?.email_address ||
+            data.id,
           imageUrl: data.image_url,
         };
         const user = await User.create(userData);
         console.log("User created:", user);
         return res.status(200).json({ success: true });
       }
+
       case "user.updated": {
         const updatedData = {
           email: data.email_addresses[0].email_address,
@@ -106,9 +110,9 @@ export const stripeWebhooks = async (req, res) => {
       });
       const { purchaseId } = session.data[0].metadata;
 
-      const purchaseData = await Purchase.findById(purchaseId)
-      purchaseData.status ='failed'
-      await purchaseData.save()
+      const purchaseData = await Purchase.findById(purchaseId);
+      purchaseData.status = "failed";
+      await purchaseData.save();
       break;
     }
     default:

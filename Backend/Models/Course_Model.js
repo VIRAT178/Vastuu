@@ -73,7 +73,7 @@ const courseSchema = new mongoose.Schema(
       max: 100,
     },
     courseContent: [chapterSchema],
-    courseRating: [
+    courseRatings: [
       { userId: { type: String }, rating: { type: Number, min: 1, max: 5 } },
     ],
     educator: {

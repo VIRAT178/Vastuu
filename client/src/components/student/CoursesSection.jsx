@@ -8,7 +8,7 @@ const CoursesSection = () => {
 
   return (
     <div className="py-16 md:px-20 px-4 w-full bg-gradient-to-b from-indigo-950 via-blue-900 to-blue-800 rounded-2xl shadow-2xl relative overflow-hidden">
-      {/* Glowing accent shapes */}
+     
       <span className="absolute top-6 left-6 w-52 h-52 bg-cyan-400 rounded-full opacity-10 blur-2xl z-0" />
       <span className="absolute bottom-8 right-20 w-56 h-56 bg-purple-400 rounded-full opacity-10 blur-2xl z-0" />
 

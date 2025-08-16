@@ -2,18 +2,32 @@ import React, { useContext, useEffect, useState } from "react";
 import { AppContext } from "../../context/AppContext";
 import { assets, dummyDashboardData } from "../../assets/assets";
 import Loading from "../../components/student/Loading";
+import axios from "axios";
+import { toast } from "react-toastify";
 
 const Dashboard = () => {
-  const { currency } = useContext(AppContext);
+  const { currency, backendUrl , getToken, isEducator } = useContext(AppContext);
   const [dashboardData, setDashboardData] = useState(null);
 
   const fetchDashboardData = async () => {
-    setDashboardData(dummyDashboardData);
+    try {
+      const token = await getToken()
+      const {data} = await axios.get(backendUrl+'/api/educator/dashboard', {headers:{Authorization:`Bearer ${token}`}})
+      if(data.success){
+        setDashboardData(data.dashboardData)
+      }else{
+        toast.error(data.message)
+      }
+    } catch (error) {
+      toast.error(error.message)
+    }
   };
 
   useEffect(() => {
-    fetchDashboardData();
-  }, []);
+    if (isEducator) {
+      fetchDashboardData()
+    }
+  }, [isEducator]);
 
   return dashboardData ? (
     <div className="relative min-h-screen bg-gradient-to-br from-indigo-950 via-blue-900 to-blue-950 flex flex-col items-start justify-between gap-8 md:p-14 p-5 pt-10">
@@ -67,8 +81,8 @@ const Dashboard = () => {
               <tr key={index} className="border-b border-cyan-300/10 hover:bg-white/10 transition">
                 <td className="px-4 py-3 text-center hidden sm:table-cell text-cyan-200">{index + 1}</td>
                 <td className="md:px-4 px-2 py-3 flex items-center space-x-3">
-                  <img src={item.student.imageUrl} alt="profile" className="w-10 h-10 rounded-full border-2 border-cyan-400"/>
-                  <span className="truncate text-cyan-100 font-medium">{item.student.name}</span>
+                  <img src={item.student?.imageUrl} alt="profile" className="w-10 h-10 rounded-full border-2 border-cyan-400"/>
+                  <span className="truncate text-cyan-100 font-medium">{item.student?.name}</span>
                 </td>
                 <td className="px-4 py-3 truncate text-cyan-200">{item.courseTitle}</td>
               </tr>

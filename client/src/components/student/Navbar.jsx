@@ -1,17 +1,38 @@
 import React, { useContext, useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { data, Link, useLocation } from 'react-router-dom';
 import { assets } from './../../assets/assets.js';
 import { useClerk, UserButton, useUser } from '@clerk/clerk-react';
 import { HiMenu, HiX } from 'react-icons/hi';
 import { AppContext } from '../../context/AppContext.jsx';
+import axios from 'axios';
+import { toast } from 'react-toastify';
 
 const Navbar = () => {
   const location = useLocation();
   const isCourseListPage = location.pathname.includes('/course-list');
   const { openSignIn } = useClerk();
   const { user } = useUser();
-  const {naviagte,isEducator} = useContext(AppContext)
+  const {naviagte,isEducator,backendUrl,getToken,setIsEductor} = useContext(AppContext)
   const [menuOpen, setMenuOpen] = useState(false);
+
+  const becomeEducator = async () => {
+    try {
+      if (isEducator) {
+        naviagte('/educator')
+        return;
+      }
+      const token = await getToken()
+      const {data} = await axios.get(backendUrl + '/api/educator/update-role',{headers:{Authorization: `Bearer ${token}`}})
+      if (data.success) {
+        setIsEductor(true)
+        toast.success(data.message)
+      }else{
+        toast.error(data.message)
+      }
+    } catch (error) {
+      toast.error(error.message)
+    }
+  }
 
   return (
     <nav className={`sticky top-0 z-50 shadow-lg transition-all duration-300 ${
@@ -29,9 +50,9 @@ const Navbar = () => {
         <div className="hidden md:flex items-center gap-7 text-slate-100 font-medium">
           {user && ( 
             <>
-              <button onClick={()=> { naviagte('/educator')}} className="hover:text-cyan-300 transition">{isEducator ? 'Teacher Dashboard': 'Become Teachar'}</button>
+              <button onClick={becomeEducator} className="hover:text-cyan-300 transition">{isEducator ? 'Teacher Dashboard': 'Become Teachar'}</button>
               <span className="text-purple-400">|</span>
-              <Link to="/myenrollments" className="hover:text-cyan-300 transition">My Enrollments</Link>
+              <Link to="/my-enrollments" className="hover:text-cyan-300 transition">My Enrollments</Link>
             </>
           )}
           {user ? (
@@ -66,8 +87,8 @@ const Navbar = () => {
         <div className="md:hidden flex flex-col gap-4 px-6 pb-4 bg-gradient-to-b from-indigo-950 to-blue-900 shadow-xl">
           {user && (
             <>
-              <button onClick={()=> {naviagte('/educator')}} className="hover:text-cyan-300 transition"> {isEducator ? 'Teacher Dashboard': 'Become Teachar'}</button>
-              <Link to="/myenrollments" className="hover:text-cyan-300 text-white transition">My Enrollments</Link>
+              <button onClick={becomeEducator} className="hover:text-cyan-300 transition"> {isEducator ? 'Teacher Dashboard': 'Become Teachar'}</button>
+              <Link to="/my-enrollments" className="hover:text-cyan-300 text-white transition">My Enrollments</Link>
             </>
           )}
           {!user && (
