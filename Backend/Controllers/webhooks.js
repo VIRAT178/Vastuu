@@ -9,86 +9,112 @@ export const clerkWebhooks = async (req, res) => {
     const whook = new Webhook(process.env.CLERK_WEBHOOK_SECRET);
     whook.verify(req.rawBody, {
       "svix-id": req.headers["svix-id"] || req.headers["Svix-Id"],
-      "svix-timestamp": req.headers["svix-timestamp"] || req.headers["Svix-Timestamp"],
-      "svix-signature": req.headers["svix-signature"] || req.headers["Svix-Signature"],
+      "svix-timestamp":
+        req.headers["svix-timestamp"] || req.headers["Svix-Timestamp"],
+      "svix-signature":
+        req.headers["svix-signature"] || req.headers["Svix-Signature"],
     });
 
     const body = JSON.parse(req.rawBody);
     const { data, type } = body;
 
     switch (type) {
-     case "user.created": {
-  
-  const email =
-    Array.isArray(data.email_addresses) &&
-    data.email_addresses.length > 0 &&
-    typeof data.email_addresses[0].email_address === "string"
-      ? data.email_addresses.email_address
-      : "";
-
-  const name =
-    [data.first_name, data.last_name].filter(Boolean).join(" ") ||
-    email ||
-    data.id;
-
-  if (!email) {
-    console.error("Webhook failed: email missing for user.id", data.id, data);
-    return res.status(400).json({ success: false, message: "User email missing in webhook" });
-  }
-
-  
-  let existingUser = await User.findOne({ email });
-
-  if (existingUser) {
-    
-    if (!existingUser.clerkUserId) {
-      existingUser.clerkUserId = data.id;
-      await existingUser.save();
-    }
-    return res.status(200).json({ success: true, message: "User already exists with this email." });
-  }
-
-  
-  let user = await User.findOne({ clerkUserId: data.id });
-
-  if (user) {
-    user.email = email;
-    user.name = name;
-    user.imageUrl = data.image_url || "";
-    await user.save();
-    console.log("User updated (already exists):", user);
-    return res.status(200).json({ success: true });
-  }
-
-  
-  user = new User({
-    clerkUserId: data.id,
-    name,
-    email,
-    imageUrl: data.image_url || "",
-    enrolledCourses: [],
-  });
-
-  await user.save();
-  console.log("User created:", user);
-  return res.status(200).json({ success: true });
-}
-
-      case "user.updated": {
+      case "user.created": {
         let email = "";
-        if (Array.isArray(data.email_addresses) && data.email_addresses.length > 0) {
+        if (
+          Array.isArray(data.email_addresses) &&
+          data.email_addresses.length > 0
+        ) {
           if (data.primary_email_address_id) {
             const primaryEmailObj = data.email_addresses.find(
               (e) => e.id === data.primary_email_address_id
             );
-            email = primaryEmailObj ? primaryEmailObj.email_address : data.email_addresses[0].email_address;
+            email = primaryEmailObj
+              ? primaryEmailObj.email_address
+              : data.email_addresses.email_address;
+          } else {
+            email = data.email_addresses.email_address;
+          }
+        }
+
+        const name =
+          [data.first_name, data.last_name].filter(Boolean).join(" ") ||
+          email ||
+          data.id;
+
+        if (!email) {
+          console.error(
+            "Webhook failed: email missing for user.id",
+            data.id,
+            data
+          );
+          return res
+            .status(400)
+            .json({ success: false, message: "User email missing in webhook" });
+        }
+
+        let existingUser = await User.findOne({ email });
+
+        if (existingUser) {
+          if (!existingUser.clerkUserId) {
+            existingUser.clerkUserId = data.id;
+            await existingUser.save();
+          }
+          return res
+            .status(200)
+            .json({
+              success: true,
+              message: "User already exists with this email.",
+            });
+        }
+
+        let user = await User.findOne({ clerkUserId: data.id });
+
+        if (user) {
+          user.email = email;
+          user.name = name;
+          user.imageUrl = data.image_url || "";
+          await user.save();
+          console.log("User updated (already exists):", user);
+          return res.status(200).json({ success: true });
+        }
+
+        user = new User({
+          clerkUserId: data.id,
+          name,
+          email,
+          imageUrl: data.image_url || "",
+          enrolledCourses: [],
+        });
+
+        await user.save();
+        console.log("User created:", user);
+        return res.status(200).json({ success: true });
+      }
+
+      case "user.updated": {
+        let email = "";
+        if (
+          Array.isArray(data.email_addresses) &&
+          data.email_addresses.length > 0
+        ) {
+          if (data.primary_email_address_id) {
+            const primaryEmailObj = data.email_addresses.find(
+              (e) => e.id === data.primary_email_address_id
+            );
+            email = primaryEmailObj
+              ? primaryEmailObj.email_address
+              : data.email_addresses[0].email_address;
           } else {
             email = data.email_addresses.email_address;
           }
         }
         const updatedData = {
           email,
-          name: [data.first_name, data.last_name].filter(Boolean).join(" ") || email || data.id,
+          name:
+            [data.first_name, data.last_name].filter(Boolean).join(" ") ||
+            email ||
+            data.id,
           imageUrl: data.image_url || "",
         };
         const user = await User.findByIdAndUpdate(data.id, updatedData, {
@@ -113,7 +139,6 @@ export const clerkWebhooks = async (req, res) => {
     return res.status(400).json({ success: false, message: error.message });
   }
 };
-
 
 const stripeInstance = new Stripe(process.env.STRIPE_SECRET_KEY);
 export const stripeWebhooks = async (req, res) => {
