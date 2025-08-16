@@ -23,7 +23,7 @@ export const clerkWebhooks = async (req, res) => {
         const email =
           Array.isArray(data.email_addresses) &&
           data.email_addresses.length > 0 &&
-          typeof data.email_addresses[0].email_address === "string"
+          typeof data.email_addresses.email_address === "string"
             ? data.email_addresses.email_address
             : "";
 
@@ -43,6 +43,7 @@ export const clerkWebhooks = async (req, res) => {
             .json({ success: false, message: "User email missing in webhook" });
         }
 
+    
         let user = await User.findOne({ email });
 
         if (user) {
