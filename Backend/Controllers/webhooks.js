@@ -96,7 +96,7 @@ export const clerkWebhooks = async (req, res) => {
         return res.status(200).json({ success: true });
       }
       case "user.deleted": {
-        await User.findOneAndDelete({ clerkUserId: data.id });
+       await User.findOneAndDelete({ clerkUserId: data.id });
         console.log("User deleted:", data.id);
         return res.status(200).json({ success: true });
       }
