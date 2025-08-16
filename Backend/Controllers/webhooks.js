@@ -13,17 +13,15 @@ export const clerkWebhooks = async (req, res) => {
       "svix-signature": req.headers["svix-signature"] || req.headers["Svix-Signature"],
     });
 
-    // Parse webhook body
     const body = JSON.parse(req.rawBody);
     const { data, type } = body;
 
     switch (type) {
       case "user.created": {
-        // Always get user's email correctly
+       
         let email = "";
         if (Array.isArray(data.email_addresses) && data.email_addresses.length > 0) {
-          // Find the primary email address if possible
-          // Fallback to the first address if not found
+        
           if (data.primary_email_address_id) {
             const primaryEmailObj = data.email_addresses.find(
               (e) => e.id === data.primary_email_address_id
@@ -33,13 +31,12 @@ export const clerkWebhooks = async (req, res) => {
             email = data.email_addresses.email_address;
           }
         }
-        // Build name with fallback (never blank)
+        
         const name =
           [data.first_name, data.last_name].filter(Boolean).join(" ") ||
           email ||
           data.id;
 
-        // Construct user data object
         const userData = {
           _id: data.id,
           email,
@@ -48,7 +45,6 @@ export const clerkWebhooks = async (req, res) => {
           enrolledCourses: [],
         };
 
-        // Validation: email must exist!
         if (!userData.email || typeof userData.email !== "string" || !userData.email.includes("@")) {
           console.error("Webhook failed: email missing or invalid for user.id", data.id, data);
           return res
@@ -56,7 +52,6 @@ export const clerkWebhooks = async (req, res) => {
             .json({ success: false, message: "User email missing or invalid in webhook" });
         }
 
-        // Create user document in MongoDB
         const user = await User.create(userData);
         console.log("User created:", user);
         return res.status(200).json({ success: true });
