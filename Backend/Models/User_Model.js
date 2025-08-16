@@ -6,6 +6,11 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    clerkUserId: {
+      type: String,
+      unique: true,
+      sparse: true,   
+    },
     name: {
       type: String,
       required: true,
@@ -14,6 +19,7 @@ const userSchema = new mongoose.Schema(
     email: {
       type: String,
       required: true,
+      unique: true,  // assuming unique emails are enforced
     },
     imageUrl: {
       type: String,
