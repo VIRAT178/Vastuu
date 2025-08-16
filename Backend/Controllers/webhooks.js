@@ -60,6 +60,7 @@ export const clerkWebhooks = async (req, res) => {
           imageUrl: data.image_url || "",
           enrolledCourses: [],
         });
+
         await user.save();
         console.log("User created:", user);
         return res.status(200).json({ success: true });
@@ -84,10 +85,14 @@ export const clerkWebhooks = async (req, res) => {
           imageUrl: data.image_url || "",
         };
 
-        const user = await User.findByIdAndUpdate(data.id, updatedData, {
-          new: true,
-          runValidators: true,
-        });
+        const user = await User.findOneAndUpdate(
+          { clerkUserId: data.id },
+          updatedData,
+          {
+            new: true,
+            runValidators: true,
+          }
+        );
         console.log("User updated:", user);
         return res.status(200).json({ success: true });
       }

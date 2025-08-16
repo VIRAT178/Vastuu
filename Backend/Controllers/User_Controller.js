@@ -5,33 +5,36 @@ import User from "../Models/User_Model.js";
 import { courseProgress } from "../Models/CoursePro_Model.js";
 
 export const getUserData = async (req, res) => {
-  const { userId } = req.auth;
-  const user = await User.findOne({ clerkUserId: userId });
-  if (!user)
-    return res.status(404).json({ success: false, message: "User not found" });
-  res.json({ success: true, user });
+  try {
+    const { userId } = req.auth;
+
+    const user = await User.findOne({ clerkUserId: userId });
+
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    }
+    res.json({ success: true, user });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
 };
 
 export const userEnrolledCourses = async (req, res) => {
   try {
     const { userId } = req.auth;
+    const user = await User.findOne({ clerkUserId: userId }).populate(
+      "enrolledCourses"
+    );
 
-    if (!userId) {
-      return res.status(401).json({
-        success: false,
-        message: "Unauthorized: User not authenticated",
-      });
-    }
-
-   const user = await User.findOne({ clerkUserId: userId }).populate("enrolledCourses");
-    User.findById(req.auth.userId);
     if (!user) {
       return res
         .status(404)
         .json({ success: false, message: "User not found" });
     }
 
-    res.json({ success: true, enrolledCourses: userData.enrolledCourses });
+    res.json({ success: true, enrolledCourses: user.enrolledCourses });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -42,7 +45,7 @@ export const purchaseCourse = async (req, res) => {
     const { courseId } = req.body;
     const { origin } = req.headers;
     const { userId } = req.auth;
-    const userData = await User.findById(userId);
+    const userData = await User.findOne({ clerkUserId: someId });
     const courseData = await Course.findById(courseId);
     if (!userData || !courseData) {
       res.json({ success: false, message: "Data is not found !" });
@@ -136,7 +139,7 @@ export const addUserRating = async (req, res) => {
     if (!course) {
       return res.json({ success: false, message: "Course not Found!" });
     }
-    const user = await User.findById(userId);
+    const user = await User.findOne({ clerkUserId: someId });
     if (!user || !user.enrolledCourses.includes(courseId)) {
       return res.json({
         success: false,
