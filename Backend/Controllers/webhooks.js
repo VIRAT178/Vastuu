@@ -21,7 +21,9 @@ export const clerkWebhooks = async (req, res) => {
     switch (type) {
       case "user.created": {
         const email =
-          Array.isArray(data.email_addresses) && data.email_addresses.length > 0
+          Array.isArray(data.email_addresses) &&
+          data.email_addresses.length > 0 &&
+          data.email_addresses[0].email_address
             ? data.email_addresses.email_address
             : "";
 
@@ -32,13 +34,12 @@ export const clerkWebhooks = async (req, res) => {
 
         const userData = {
           _id: data.id,
-          email, 
-          name, 
-          imageUrl: data.image_url || "", 
+          email,
+          name,
+          imageUrl: data.image_url || "",
           enrolledCourses: [],
         };
 
-        
         if (!userData.email) {
           console.error("Webhook failed: email missing for user.id", data.id);
           return res
