@@ -65,7 +65,6 @@ export const clerkWebhooks = async (req, res) => {
         console.log("User created:", user);
         return res.status(200).json({ success: true });
       }
-
       case "user.updated": {
         const email =
           Array.isArray(data.email_addresses) &&
@@ -96,13 +95,11 @@ export const clerkWebhooks = async (req, res) => {
         console.log("User updated:", user);
         return res.status(200).json({ success: true });
       }
-
       case "user.deleted": {
-        await User.findByIdAndDelete(data.id);
+        await User.findOneAndDelete({ clerkUserId: data.id });
         console.log("User deleted:", data.id);
         return res.status(200).json({ success: true });
       }
-
       default:
         return res.status(200).json({ received: true });
     }

@@ -4,6 +4,7 @@ import { Purchase } from "../Models/purchase.js";
 import User from "../Models/User_Model.js";
 import { courseProgress } from "../Models/CoursePro_Model.js";
 
+
 export const getUserData = async (req, res) => {
   try {
     const { userId } = req.auth;
@@ -48,7 +49,7 @@ export const purchaseCourse = async (req, res) => {
 
     const purchaseData = {
       courseId: courseData._id,
-      userId, // Clerk user ID
+      userId,
       amount: (
         courseData.coursePrice -
         (courseData.discount * courseData.coursePrice) / 100
@@ -113,15 +114,16 @@ export const updateUserCourseProgress = async (req, res) => {
   }
 };
 
+
 export const getUserProgress = async (req, res) => {
   try {
     const userId = req.auth.userId;
-    const { courseId, lectureId } = req.body;
+    const { courseId } = req.body;
 
     const progressData = await courseProgress.findOne({ userId, courseId });
     res.json({ success: true, progressData });
   } catch (error) {
-    res.json({ success: false, message: error.message }); 
+    res.json({ success: false, message: error.message });
   }
 };
 
