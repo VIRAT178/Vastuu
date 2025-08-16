@@ -23,9 +23,9 @@ export const userEnrolledCourses = async (req, res) => {
       });
     }
 
-    const userData = await User.findById(userId).populate("enrolledCourses");
+   const user = await User.findOne({ clerkUserId: userId }).populate("enrolledCourses");
     User.findById(req.auth.userId);
-    if (!userData) {
+    if (!user) {
       return res
         .status(404)
         .json({ success: false, message: "User not found" });
