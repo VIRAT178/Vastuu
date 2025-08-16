@@ -134,7 +134,8 @@ export const stripeWebhooks = async (req, res) => {
       const { purchaseId } = session.data[0].metadata;
 
       const purchaseData = await Purchase.findById(purchaseId);
-      const userData = await User.findById(purchaseData.userId);
+      const userData = await User.findOne({ clerkUserId: purchaseData.userId });
+
 
       const courseData = await Course.findById(
         purchaseData.courseId.toString()
