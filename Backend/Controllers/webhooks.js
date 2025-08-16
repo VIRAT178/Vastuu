@@ -60,12 +60,10 @@ export const clerkWebhooks = async (req, res) => {
             existingUser.clerkUserId = data.id;
             await existingUser.save();
           }
-          return res
-            .status(200)
-            .json({
-              success: true,
-              message: "User already exists with this email.",
-            });
+          return res.status(200).json({
+            success: true,
+            message: "User already exists with this email.",
+          });
         }
 
         let user = await User.findOne({ clerkUserId: data.id });
@@ -80,6 +78,7 @@ export const clerkWebhooks = async (req, res) => {
         }
 
         user = new User({
+          _id: data.id,
           clerkUserId: data.id,
           name,
           email,
