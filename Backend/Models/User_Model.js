@@ -6,6 +6,11 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    clerkUserId: {
+      type: String,
+      unique: true,
+      required: true,
+    },
     name: {
       type: String,
       required: true,

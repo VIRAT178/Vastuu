@@ -9,10 +9,8 @@ export const clerkWebhooks = async (req, res) => {
     const whook = new Webhook(process.env.CLERK_WEBHOOK_SECRET);
     whook.verify(req.rawBody, {
       "svix-id": req.headers["svix-id"] || req.headers["Svix-Id"],
-      "svix-timestamp":
-        req.headers["svix-timestamp"] || req.headers["Svix-Timestamp"],
-      "svix-signature":
-        req.headers["svix-signature"] || req.headers["Svix-Signature"],
+      "svix-timestamp": req.headers["svix-timestamp"] || req.headers["Svix-Timestamp"],
+      "svix-signature": req.headers["svix-signature"] || req.headers["Svix-Signature"],
     });
 
     const body = JSON.parse(req.rawBody);
@@ -20,26 +18,68 @@ export const clerkWebhooks = async (req, res) => {
 
     switch (type) {
       case "user.created": {
+        // Safely extract email from first element of email_addresses array
+        const email =
+          Array.isArray(data.email_addresses) &&
+          data.email_addresses.length > 0 &&
+          typeof data.email_addresses[0].email_address === "string"
+            ? data.email_addresses.email_address
+            : "";
+
+        const name =
+          [data.first_name, data.last_name].filter(Boolean).join(" ") ||
+          email ||
+          data.id;
+
+        if (!email) {
+          console.error("Webhook failed: email missing for user.id", data.id, data);
+          return res.status(400).json({ success: false, message: "User email missing in webhook" });
+        }
+
         const userData = {
           _id: data.id,
-          email: data.email_addresses.email_address,
-          name:
-            [data.first_name, data.last_name].filter(Boolean).join(" ") ||
-            data.email_addresses?.email_address ||
-            data.id,
-          imageUrl: data.image_url,
+          email,
+          name,
+          imageUrl: data.image_url || "",
+          enrolledCourses: [],
         };
+
+        const existingUser = await User.findById(data.id);
+        if (existingUser) {
+          // If user already exists, update info
+          existingUser.email = email;
+          existingUser.name = name;
+          existingUser.imageUrl = data.image_url || "";
+          await existingUser.save();
+          console.log("User updated (already exists):", existingUser);
+          return res.status(200).json({ success: true });
+        }
+
+        // If new user, create
         const user = await User.create(userData);
         console.log("User created:", user);
         return res.status(200).json({ success: true });
       }
 
       case "user.updated": {
+        const email =
+          Array.isArray(data.email_addresses) &&
+          data.email_addresses.length > 0 &&
+          typeof data.email_addresses[0].email_address === "string"
+            ? data.email_addresses.email_address
+            : "";
+
+        const name =
+          [data.first_name, data.last_name].filter(Boolean).join(" ") ||
+          email ||
+          data.id;
+
         const updatedData = {
-          email: data.email_addresses[0].email_address,
-          name: `${data.first_name || ""} ${data.last_name || ""}`.trim(),
-          imageUrl: data.image_url,
+          email,
+          name,
+          imageUrl: data.image_url || "",
         };
+
         const user = await User.findByIdAndUpdate(data.id, updatedData, {
           new: true,
           runValidators: true,
@@ -47,11 +87,13 @@ export const clerkWebhooks = async (req, res) => {
         console.log("User updated:", user);
         return res.status(200).json({ success: true });
       }
+
       case "user.deleted": {
         await User.findByIdAndDelete(data.id);
         console.log("User deleted:", data.id);
         return res.status(200).json({ success: true });
       }
+
       default:
         return res.status(200).json({ received: true });
     }

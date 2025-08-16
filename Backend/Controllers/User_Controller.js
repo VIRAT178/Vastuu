@@ -15,7 +15,7 @@ export const getUserData = async (req, res) => {
       });
     }
 
-    const user = await User.findById(userId);
+    const user = await User.findOne({ clerkUserId: req.auth.userId });
 
     if (!user) {
       return res
@@ -41,7 +41,7 @@ export const userEnrolledCourses = async (req, res) => {
     }
 
     const userData = await User.findById(userId).populate("enrolledCourses");
-
+    User.findById(req.auth.userId);
     if (!userData) {
       return res
         .status(404)

@@ -43,6 +43,8 @@ export const AppContextProvider = (props) => {
       });
       if (data.success) {
         setUserData(data.user);
+        console.log("Current Clerk User ID:", data.user._id);
+
       } else {
         toast.error(data.message);
       }
