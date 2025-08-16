@@ -31,7 +31,7 @@ export const clerkWebhooks = async (req, res) => {
             );
             email = primaryEmailObj
               ? primaryEmailObj.email_address
-              : data.email_addresses.email_address;
+              : data.email_addresses[0].email_address;
           } else {
             email = data.email_addresses.email_address;
           }
@@ -108,6 +108,7 @@ export const clerkWebhooks = async (req, res) => {
             email = data.email_addresses.email_address;
           }
         }
+
         const updatedData = {
           email,
           name:
@@ -116,10 +117,12 @@ export const clerkWebhooks = async (req, res) => {
             data.id,
           imageUrl: data.image_url || "",
         };
+
         const user = await User.findByIdAndUpdate(data.id, updatedData, {
           new: true,
           runValidators: true,
         });
+
         console.log("User updated:", user);
         return res.status(200).json({ success: true });
       }
