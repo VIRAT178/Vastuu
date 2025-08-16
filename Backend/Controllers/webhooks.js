@@ -20,83 +20,25 @@ export const clerkWebhooks = async (req, res) => {
 
     switch (type) {
       case "user.created": {
-        let email = "";
-        if (
-          Array.isArray(data.email_addresses) &&
-          data.email_addresses.length > 0
-        ) {
-          if (data.primary_email_address_id) {
-            const primaryEmailObj = data.email_addresses.find(
-              (e) => e.id === data.primary_email_address_id
-            );
-            email = primaryEmailObj
-              ? primaryEmailObj.email_address
-              : data.email_addresses[0].email_address;
-          } else {
-            email = data.email_addresses.email_address;
-          }
-        }
-
-        const name =
-          [data.first_name, data.last_name].filter(Boolean).join(" ") ||
-          email ||
-          data.id;
-
         const userData = {
           _id: data.id,
-          email,
-          name,
-          imageUrl: data.image_url || "",
-          enrolledCourses: [],
-        };
-
-        if (
-          !userData.email ||
-          typeof userData.email !== "string" ||
-          !userData.email.includes("@")
-        ) {
-          console.error(
-            "Webhook failed: email missing or invalid for user.id",
+          email: data.email_addresses.email_address,
+          name:
+            [data.first_name, data.last_name].filter(Boolean).join(" ") ||
+            data.email_addresses?.email_address ||
             data.id,
-            data
-          );
-          return res
-            .status(400)
-            .json({
-              success: false,
-              message: "User email missing or invalid in webhook",
-            });
-        }
-
+          imageUrl: data.image_url,
+        };
         const user = await User.create(userData);
         console.log("User created:", user);
         return res.status(200).json({ success: true });
       }
 
       case "user.updated": {
-        let email = "";
-        if (
-          Array.isArray(data.email_addresses) &&
-          data.email_addresses.length > 0
-        ) {
-          if (data.primary_email_address_id) {
-            const primaryEmailObj = data.email_addresses.find(
-              (e) => e.id === data.primary_email_address_id
-            );
-            email = primaryEmailObj
-              ? primaryEmailObj.email_address
-              : data.email_addresses[0].email_address;
-          } else {
-            email = data.email_addresses.email_address;
-          }
-        }
         const updatedData = {
-          email,
-          name:
-            [data.first_name, data.last_name].filter(Boolean).join(" ") ||
-            email ||
-            data.id,
-          imageUrl: data.image_url || "",
+          email: data.email_addresses[0].email_address,
+          name: `${data.first_name || ""} ${data.last_name || ""}`.trim(),
+          imageUrl: data.image_url,
         };
         const user = await User.findByIdAndUpdate(data.id, updatedData, {
           new: true,
@@ -105,13 +47,11 @@ export const clerkWebhooks = async (req, res) => {
         console.log("User updated:", user);
         return res.status(200).json({ success: true });
       }
-
       case "user.deleted": {
         await User.findByIdAndDelete(data.id);
         console.log("User deleted:", data.id);
         return res.status(200).json({ success: true });
       }
-
       default:
         return res.status(200).json({ received: true });
     }

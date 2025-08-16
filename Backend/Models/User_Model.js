@@ -9,12 +9,10 @@ const userSchema = new mongoose.Schema(
     name: {
       type: String,
       required: true,
-      default: "User",
     },
     email: {
       type: String,
       required: true,
-      unique: true,
     },
     imageUrl: {
       type: String,
