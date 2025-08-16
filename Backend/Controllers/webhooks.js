@@ -49,12 +49,11 @@ export const clerkWebhooks = async (req, res) => {
             .status(400)
             .json({ success: false, message: "User email missing in webhook" });
         }
-        
+
         if (!userData.imageUrl) {
           userData.imageUrl = "";
         }
 
-        
         const user = await User.create(userData);
         console.log("User created:", user);
         return res.status(200).json({ success: true });
