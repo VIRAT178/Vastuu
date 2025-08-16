@@ -20,15 +20,35 @@ export const clerkWebhooks = async (req, res) => {
 
     switch (type) {
       case "user.created": {
+        const email =
+          Array.isArray(data.email_addresses) && data.email_addresses.length > 0
+            ? data.email_addresses.email_address
+            : "";
+
+        const name =
+          [data.first_name, data.last_name].filter(Boolean).join(" ") ||
+          email ||
+          data.id;
+
         const userData = {
           _id: data.id,
-          email: data.email_addresses.email_address,
-          name:
-            [data.first_name, data.last_name].filter(Boolean).join(" ") ||
-            data.email_addresses?.email_address ||
-            data.id,
-          imageUrl: data.image_url,
+          email, 
+          name, 
+          imageUrl: data.image_url || "", 
+          enrolledCourses: [],
         };
+
+        
+        if (!userData.email) {
+          console.error("Webhook failed: email missing for user.id", data.id);
+          return res
+            .status(400)
+            .json({ success: false, message: "User email missing in webhook" });
+        }
+        if (!userData.imageUrl) {
+          userData.imageUrl = "";
+        }
+
         const user = await User.create(userData);
         console.log("User created:", user);
         return res.status(200).json({ success: true });
