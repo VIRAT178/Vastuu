@@ -1,10 +1,10 @@
 import React from "react";
-import { assets, dummyEducatorData } from "../../assets/assets.js";
+import { assets } from "../../assets/assets.js";
 import { UserButton, useUser } from "@clerk/clerk-react";
 import { Link } from "react-router-dom";
 
 const Navbar = () => {
-  const educatorData = dummyEducatorData;
+  
   const { user } = useUser();
   return (
     <div className="w-full bg-gradient-to-r from-cyan-900 via-indigo-900 to-blue-900 px-6 md:px-14 py-4 flex items-center justify-between shadow-lg relative z-20">
