@@ -1,10 +1,12 @@
 import { createContext, useEffect, useState } from "react";
-import { DummyCourses } from "../assets/assets";
 import { useNavigate } from "react-router-dom";
 import humanizeDuration from "humanize-duration";
 import { useAuth, useUser } from "@clerk/clerk-react";
 import axios from "axios";
 import { toast } from "react-toastify";
+const { user } = useUser();
+const clerkUserId = user?.id;
+
 
 export const AppContext = createContext();
 
@@ -44,7 +46,6 @@ export const AppContextProvider = (props) => {
       if (data.success) {
         setUserData(data.user);
         console.log("Current Clerk User ID:", data.user._id);
-
       } else {
         toast.error(data.message);
       }
@@ -108,19 +109,18 @@ export const AppContextProvider = (props) => {
         toast.error(data.message);
       }
     } catch (error) {
-      toast.error(error.message)
+      toast.error(error.message);
     }
   };
 
   useEffect(() => {
     fetchAllCourses();
-   
   }, []);
 
   useEffect(() => {
     if (user) {
       fetchUserData();
-       fetchUserEnrolledCourses();
+      fetchUserEnrolledCourses();
     }
   }, [user]);
 

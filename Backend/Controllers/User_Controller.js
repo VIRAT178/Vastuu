@@ -5,28 +5,11 @@ import User from "../Models/User_Model.js";
 import { courseProgress } from "../Models/CoursePro_Model.js";
 
 export const getUserData = async (req, res) => {
-  try {
-    const { userId } = req.auth;
-
-    if (!userId) {
-      return res.status(401).json({
-        success: false,
-        message: "Unauthorized: User not authenticated",
-      });
-    }
-
-    const user = await User.findOne({ clerkUserId: req.auth.userId });
-
-    if (!user) {
-      return res
-        .status(404)
-        .json({ success: false, message: "User not found" });
-    }
-
-    res.json({ success: true, user });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
+  const { userId } = req.auth;
+  const user = await User.findOne({ clerkUserId: userId });
+  if (!user)
+    return res.status(404).json({ success: false, message: "User not found" });
+  res.json({ success: true, user });
 };
 
 export const userEnrolledCourses = async (req, res) => {
