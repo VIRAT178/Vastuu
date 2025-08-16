@@ -160,11 +160,16 @@ export const addUserRating = async (req, res) => {
         message: "User is not purchased this course!",
       });
     }
+
+
+    if (!course.courseRatings) {
+      course.courseRatings = [];
+    }
     const existingRatingIndex = course.courseRatings.findIndex(
       (r) => r.userId === userId
     );
     if (existingRatingIndex > -1) {
-      course.courseRating[existingRatingIndex].rating = rating;
+      course.courseRatings[existingRatingIndex].rating = rating;
     } else {
       course.courseRatings.push({ userId, rating });
     }
