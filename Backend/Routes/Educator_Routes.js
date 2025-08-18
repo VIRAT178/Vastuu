@@ -17,9 +17,10 @@ educatorRouter.get("/update-role", requireAuth(), updateRoleEducator);
 educatorRouter.post(
   "/add-course",
   requireAuth(),
-  addCourse,
   protectEducator,
   upload.single("image"),
+  addCourse,
+  
 );
 educatorRouter.get(
   "/courses",
